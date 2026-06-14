@@ -9,6 +9,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const app = express();
+const chatRoutes = require('./routes/chatRoutes');
 
 app.use(cors());
 app.use(express.json());
@@ -19,6 +20,8 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api', assignmentRoutes);
+app.use('/api/chat', chatRoutes);
+
 app.get("/", (req, res) => {
     res.json({
         message: "Smart E-Learning Backend API is running"
