@@ -8,9 +8,11 @@ const courseRoutes = require('./routes/courseRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
+const userRoutes = require('./routes/userRoutes');
 const app = express();
 const chatRoutes = require('./routes/chatRoutes');
-
+const instructorRoutes = require('./routes/instructorRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 app.use(cors());
 app.use(express.json());
 
@@ -21,7 +23,9 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api', assignmentRoutes);
 app.use('/api/chat', chatRoutes);
-
+app.use('/api/users', userRoutes);
+app.use('/api/instructor', instructorRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.get("/", (req, res) => {
     res.json({
         message: "Smart E-Learning Backend API is running"

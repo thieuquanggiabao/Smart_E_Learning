@@ -97,7 +97,54 @@ const submitAndGrade = async (req, res) => {
         };
 
         const submissionRef = await db.collection('submissions').add(newSubmission);
+        try {
+            console.log('Đang tính toán điểm trung bình mới cho học viên...');
 
+            // 1. Lấy toàn bộ bài nộp của học viên này trong khóa học hiện tại
+            const submissionsSnapshot = await db.collection('submissions')
+                .where('courseId', '==', courseId)
+                .where('studentId', '==', studentId)
+                .get();
+
+            let totalScore = 0;
+            let gradedCount = 0;
+
+            // 2. Cộng dồn tất cả các điểm số AI hợp lệ
+            submissionsSnapshot.forEach(doc => {
+                const subData = doc.data();
+                if (subData.gradingResult && subData.gradingResult.aiScore !== undefined) {
+                    totalScore += parseFloat(subData.gradingResult.aiScore);
+                    gradedCount++;
+                }
+            });
+
+            // 3. Tính điểm trung bình cộng
+            let newAverage = 0;
+            if (gradedCount > 0) {
+                newAverage = parseFloat((totalScore / gradedCount).toFixed(2));
+            }
+
+            // 4. Cập nhật bản ghi đăng ký (enrollment) của học viên
+            const enrollmentSnapshot = await db.collection('enrollments')
+                .where('courseId', '==', courseId)
+                .where('studentId', '==', studentId)
+                .get();
+
+            if (!enrollmentSnapshot.empty) {
+                const enrollmentDoc = enrollmentSnapshot.docs[0];
+                await db.collection('enrollments').doc(enrollmentDoc.id).update({
+                    averageScore: newAverage,
+                    updatedAt: new Date().toISOString()
+                });
+                console.log(`Điểm trung bình đã được cập nhật thành ${newAverage}`);
+            }
+            const { checkAndGenerateCertificate } = require('../utils/certificateHelper');
+            // ... sau khi update enrollment điểm trung bình:
+            await checkAndGenerateCertificate(studentId, courseId);
+        } catch (calcError) {
+            console.error('Lỗi khi cập nhật điểm trung bình:', calcError);
+            // Chúng ta log lỗi ra nhưng không chặn request chính, vì việc chấm điểm vẫn đã thành công
+        }
         res.status(201).json({
             message: 'Nộp bài thành công! AI đã chấm xong.',
             submissionId: submissionRef.id,

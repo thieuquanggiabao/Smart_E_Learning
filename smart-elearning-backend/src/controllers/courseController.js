@@ -124,7 +124,9 @@ const markLessonCompleted = async (req, res) => {
             status: status,
             updatedAt: new Date().toISOString()
         });
-
+        const { checkAndGenerateCertificate } = require('../utils/certificateHelper');
+        // ... cuối hàm markLessonCompleted:
+        await checkAndGenerateCertificate(studentId, courseId);
         res.status(200).json({
             message: 'Cập nhật tiến độ thành công!',
             progress: progress,
