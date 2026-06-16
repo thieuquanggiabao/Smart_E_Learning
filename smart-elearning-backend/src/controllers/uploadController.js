@@ -12,14 +12,15 @@ const bucket = storage.bucket(bucketName);
 
 const generateUploadUrl = async (req, res) => {
     try {
-        const { fileName, contentType } = req.body;
+        const { fileName, contentType, folder = 'videos' } = req.body;
 
         if (!fileName || !contentType) {
             return res.status(400).json({ message: 'Vui lòng cung cấp tên file và định dạng file' });
         }
 
         // Tạo tên file duy nhất kết hợp với timestamp để tránh ghi đè
-        const uniqueFileName = `videos/${Date.now()}_${fileName}`;
+        // folder có dạng "videos" hoặc "groups/123" hoặc "chat"
+        const uniqueFileName = `${folder}/${Date.now()}_${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         const file = bucket.file(uniqueFileName);
 
         // Yêu cầu Cloud Storage cấp một Signed URL với quyền 'write' (ghi)

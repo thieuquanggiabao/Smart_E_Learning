@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, GraduationCap, Award, Settings,
-  ChevronLeft, ChevronRight, LogOut, Zap, Menu, X, Bell, User
+  ChevronLeft, ChevronRight, LogOut, Zap, Menu, X, Bell, User, Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -18,11 +18,13 @@ export default function Layout({ children }) {
     { to: '/instructor/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/instructor/courses',   icon: BookOpen,        label: 'Quản lý khóa học' },
     { to: '/courses',              icon: GraduationCap,   label: 'Browse Courses' },
+    { to: '/groups',               icon: Users,           label: 'Nhóm' },
     { to: '/settings',             icon: Settings,        label: 'Settings' },
   ] : [
     { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/courses',      icon: BookOpen,         label: 'Browse Courses' },
     { to: '/my-learning',  icon: GraduationCap,    label: 'My Learning' },
+    { to: '/groups',       icon: Users,            label: 'Nhóm' },
     { to: '/certificates', icon: Award,             label: 'Certificates' },
     { to: '/settings',     icon: Settings,          label: 'Settings' },
   ];

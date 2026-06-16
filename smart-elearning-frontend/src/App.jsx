@@ -21,6 +21,8 @@ import LessonViewPage     from './pages/LessonViewPage';
 import MyLearningPage     from './pages/MyLearningPage';
 import CertificatesPage   from './pages/CertificatesPage';
 import SettingsPage       from './pages/SettingsPage';
+import GroupsListPage     from './pages/GroupsListPage';
+import GroupDetailPage    from './pages/GroupDetailPage';
 
 function RootRedirect() {
   const { user, isAuthenticated } = useAuth();
@@ -48,7 +50,11 @@ function App() {
           <Route path="/instructor/courses/new" element={<ProtectedRoute><Layout><InstructorCreateCourse /></Layout></ProtectedRoute>} />
           <Route path="/instructor/courses/:courseId" element={<ProtectedRoute><Layout><InstructorCourseDetail /></Layout></ProtectedRoute>} />
 
-          {/* Courses */}
+          {/* Group routes for both */}
+          <Route path="/groups" element={<ProtectedRoute><Layout><GroupsListPage /></Layout></ProtectedRoute>} />
+          <Route path="/groups/:groupId" element={<ProtectedRoute><Layout><GroupDetailPage /></Layout></ProtectedRoute>} />
+
+          {/* Student Routes */}
           <Route path="/courses"                         element={<ProtectedRoute><Layout><BrowseCourses /></Layout></ProtectedRoute>} />
           <Route path="/courses/:courseId"               element={<ProtectedRoute><Layout><CourseDetailPage /></Layout></ProtectedRoute>} />
 
