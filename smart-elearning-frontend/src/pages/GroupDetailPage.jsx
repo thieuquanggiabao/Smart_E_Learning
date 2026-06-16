@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import { Users, Mail, Plus, Shield, ArrowLeft, Video, Trash2, Send, Paperclip, FileText, Image as ImageIcon, X } from 'lucide-react';
+import { Users, Mail, Plus, Shield, ArrowLeft, Video, Trash2, Send, Paperclip, FileText, Image as ImageIcon, X, Radio, Zap } from 'lucide-react';
 import api from '../services/api';
 import { Spinner } from '../components/ui';
 import { uploadFileToStorage } from '../utils/uploadHelper';
@@ -22,6 +22,10 @@ export default function GroupDetailPage() {
   const [sendingChat, setSendingChat] = useState(false);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
+
+  // Live room state
+  const [liveRoom, setLiveRoom] = useState(null);
+  const [startingLive, setStartingLive] = useState(false);
 
   // Invite state
   const [inviteEmail, setInviteEmail] = useState('');
@@ -55,6 +59,16 @@ export default function GroupDetailPage() {
       setMessages(prev => [...prev, msg]);
     });
 
+    // Lắng nghe phòng live bắt đầu
+    socket.on('roomStarted', (data) => {
+      setLiveRoom({ active: true, ...data });
+    });
+
+    // Lắng nghe phòng live kết thúc
+    socket.on('roomEnded', () => {
+      setLiveRoom(prev => prev ? { ...prev, active: false } : null);
+    });
+
     // Lắng nghe nhóm bị xóa
     socket.on('groupDeleted', () => {
       alert('Chủ nhóm đã giải tán nhóm này!');
@@ -77,6 +91,10 @@ export default function GroupDetailPage() {
       const res = await api.get(`/groups/${groupId}`);
       setGroup(res.data);
       setMembers(res.data.members || []);
+      // Kiểm tra trạng thái phòng live
+      if (res.data.liveRoom?.active) {
+        setLiveRoom(res.data.liveRoom);
+      }
     } catch (err) {
       alert('Không thể tải thông tin nhóm');
       navigate('/groups');
@@ -123,6 +141,24 @@ export default function GroupDetailPage() {
       navigate('/groups');
     } catch (err) {
       alert(err.response?.data?.message || 'Lỗi giải tán nhóm');
+    }
+  };
+
+  const handleStartLive = async () => {
+    setStartingLive(true);
+    try {
+      await api.post(`/live/${groupId}/start`);
+      // Socket sẽ nhận event roomStarted và cập nhật state
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Lỗi tạo phòng live';
+      if (err.response?.status === 409) {
+        // Phòng đã tồn tại → tham gia luôn
+        navigate(`/live/${groupId}`);
+      } else {
+        alert(msg);
+      }
+    } finally {
+      setStartingLive(false);
     }
   };
 
@@ -219,15 +255,32 @@ export default function GroupDetailPage() {
         {/* Left: Tương lai sẽ là Phòng họp trực tuyến / Tin nhắn */}
         <div className="flex-1 bg-black/40 border border-white/5 rounded-3xl flex flex-col overflow-hidden relative">
           
-          {/* Nút vào phòng học (Tạm thời Disabled) */}
+          {/* Nút vào phòng học - Đã có Live */}
           <div className="h-14 bg-indigo-900/20 border-b border-white/5 flex items-center justify-between px-6 shrink-0">
             <div className="font-bold text-white flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               Thảo luận chung
             </div>
-            <button disabled className="px-3 py-1.5 bg-indigo-600/30 text-indigo-300 text-xs rounded-lg font-medium cursor-not-allowed flex items-center gap-1">
-              <Video size={14}/> Tham gia phòng họp Live
-            </button>
+            {liveRoom?.active ? (
+              <button
+                onClick={() => navigate(`/live/${groupId}`)}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded-lg font-medium flex items-center gap-1.5 animate-pulse"
+              >
+                <Radio size={12}/> Tham gia phòng Live
+              </button>
+            ) : (
+              <button
+                onClick={handleStartLive}
+                disabled={startingLive}
+                className="px-3 py-1.5 bg-indigo-600/60 hover:bg-indigo-600 text-indigo-200 text-xs rounded-lg font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+              >
+                {startingLive ? (
+                  <><span className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin"/>&nbsp;Đang tạo...</>
+                ) : (
+                  <><Zap size={12}/> Bật phòng Live</>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Message List */}

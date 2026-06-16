@@ -23,6 +23,7 @@ import CertificatesPage   from './pages/CertificatesPage';
 import SettingsPage       from './pages/SettingsPage';
 import GroupsListPage     from './pages/GroupsListPage';
 import GroupDetailPage    from './pages/GroupDetailPage';
+import LiveRoomPage       from './pages/LiveRoomPage';
 
 function RootRedirect() {
   const { user, isAuthenticated } = useAuth();
@@ -53,6 +54,9 @@ function App() {
           {/* Group routes for both */}
           <Route path="/groups" element={<ProtectedRoute><Layout><GroupsListPage /></Layout></ProtectedRoute>} />
           <Route path="/groups/:groupId" element={<ProtectedRoute><Layout><GroupDetailPage /></Layout></ProtectedRoute>} />
+
+          {/* Live Room — Toàn màn hình, không có Layout sidebar */}
+          <Route path="/live/:groupId" element={<ProtectedRoute><LiveRoomPage /></ProtectedRoute>} />
 
           {/* Student Routes */}
           <Route path="/courses"                         element={<ProtectedRoute><Layout><BrowseCourses /></Layout></ProtectedRoute>} />
