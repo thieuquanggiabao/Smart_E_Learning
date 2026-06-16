@@ -13,12 +13,16 @@ const app = express();
 const chatRoutes = require('./routes/chatRoutes');
 const instructorRoutes = require('./routes/instructorRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const quizRoutes = require('./routes/quizRoutes');
+const studySetRoutes = require('./routes/studySetRoutes');
 app.use(cors());
 app.use(express.json());
 
 // 2. Gắn route vào app (Phải đặt dưới app.use(express.json()) nhé)
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/courses', quizRoutes);
+app.use('/api/courses', studySetRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api', assignmentRoutes);

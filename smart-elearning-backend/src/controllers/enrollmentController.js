@@ -16,7 +16,7 @@ const enrollCourse = async (req, res) => {
         // 2. Kiểm tra xem học viên đã đăng ký khóa này chưa
         const enrollmentsRef = db.collection('enrollments');
         const checkSnapshot = await enrollmentsRef
-            .where('userId', '==', userId)
+            .where('studentId', '==', userId)
             .where('courseId', '==', courseId)
             .get();
 
@@ -57,7 +57,7 @@ const getMyEnrolledCourses = async (req, res) => {
 
         // 1. Quét trong collection 'enrollments' tìm các bản ghi của user này
         const enrollmentsSnapshot = await db.collection('enrollments')
-            .where('userId', '==', userId)
+            .where('studentId', '==', userId)
             .get();
 
         if (enrollmentsSnapshot.empty) {
@@ -75,8 +75,8 @@ const getMyEnrolledCourses = async (req, res) => {
                 enrolledCourses.push({
                     enrollmentId: doc.id,
                     progress: enrollmentData.progress, // Phần trăm hoàn thành
-                    enrolledAt: enrollmentData.enrolledAt,
-                    course: courseDoc.data() // Kẹp thêm thông tin (tên, ảnh, mô tả) của khóa học
+                    enrolledAt: enrollmentData.createdAt || enrollmentData.enrolledAt,
+                    course: { courseId: courseDoc.id, ...courseDoc.data() } // Kẹp thêm thông tin (tên, ảnh, mô tả) của khóa học
                 });
             }
         }

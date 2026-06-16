@@ -83,4 +83,28 @@ const askChatbot = async (req, res) => {
     }
 };
 
-module.exports = { askChatbot };
+const getChatHistory = async (req, res) => {
+    try {
+        const studentId = req.user.userId;
+
+        // Lấy tất cả lịch sử chat của học viên
+        const snapshot = await db.collection('chat_history')
+            .where('studentId', '==', studentId)
+            .get();
+
+        const history = [];
+        snapshot.forEach(doc => {
+            history.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Sắp xếp mới nhất lên đầu (giảm dần theo thời gian)
+        history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        res.status(200).json(history);
+    } catch (error) {
+        console.error('Lỗi lấy lịch sử chat:', error);
+        res.status(500).json({ message: 'Lỗi server khi lấy lịch sử chat', error: error.message });
+    }
+};
+
+module.exports = { askChatbot, getChatHistory };

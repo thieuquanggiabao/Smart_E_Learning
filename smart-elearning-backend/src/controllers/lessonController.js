@@ -67,5 +67,71 @@ const getLessonsByCourse = async (req, res) => {
     }
 };
 
-// Nhớ export thêm hàm này ở cuối file
-module.exports = { createLesson, getLessonsByCourse };
+// Cập nhật bài giảng
+const updateLesson = async (req, res) => {
+    try {
+        const { courseId, lessonId } = req.params;
+        const { title, description, videoUrl, order } = req.body;
+
+        const lessonRef = db.collection('courses').doc(courseId).collection('lessons').doc(lessonId);
+        const lessonDoc = await lessonRef.get();
+
+        if (!lessonDoc.exists) {
+            return res.status(404).json({ message: 'Không tìm thấy bài giảng!' });
+        }
+
+        const updatedData = {
+            title: title || lessonDoc.data().title,
+            description: description || lessonDoc.data().description,
+            videoUrl: videoUrl !== undefined ? videoUrl : lessonDoc.data().videoUrl,
+            order: order || lessonDoc.data().order,
+            updatedAt: new Date().toISOString()
+        };
+
+        await lessonRef.update(updatedData);
+
+        res.status(200).json({
+            message: 'Cập nhật bài giảng thành công!',
+            lesson: { lessonId, ...lessonDoc.data(), ...updatedData }
+        });
+
+    } catch (error) {
+        console.error('Lỗi khi cập nhật bài giảng:', error);
+        res.status(500).json({ message: 'Lỗi server nội bộ', error: error.message });
+    }
+};
+
+// Xóa bài giảng
+const deleteLesson = async (req, res) => {
+    try {
+        const { courseId, lessonId } = req.params;
+
+        const courseRef = db.collection('courses').doc(courseId);
+        const lessonRef = courseRef.collection('lessons').doc(lessonId);
+        
+        const lessonDoc = await lessonRef.get();
+        if (!lessonDoc.exists) {
+            return res.status(404).json({ message: 'Không tìm thấy bài giảng!' });
+        }
+
+        // Xóa lesson
+        await lessonRef.delete();
+
+        // Cập nhật lại totalLessons của course
+        const courseDoc = await courseRef.get();
+        if (courseDoc.exists) {
+            const currentTotal = courseDoc.data().totalLessons || 1;
+            await courseRef.update({
+                totalLessons: Math.max(0, currentTotal - 1)
+            });
+        }
+
+        res.status(200).json({ message: 'Xóa bài giảng thành công!' });
+
+    } catch (error) {
+        console.error('Lỗi khi xóa bài giảng:', error);
+        res.status(500).json({ message: 'Lỗi server nội bộ', error: error.message });
+    }
+};
+
+module.exports = { createLesson, getLessonsByCourse, updateLesson, deleteLesson };

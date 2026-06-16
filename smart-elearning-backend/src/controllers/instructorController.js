@@ -6,7 +6,7 @@ const getInstructorDashboard = async (req, res) => {
 
         // 1. Lấy danh sách khóa học do giảng viên này tạo
         const coursesSnapshot = await db.collection('courses')
-            .where('instructorId', '==', instructorId)
+            .where('teacherId', '==', instructorId)
             .get();
 
         if (coursesSnapshot.empty) {
