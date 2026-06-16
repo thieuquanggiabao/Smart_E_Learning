@@ -20,7 +20,11 @@ const verifyToken = async (req, res, next) => {
         }
 
         // Gắn thông tin user vào request để các API phía sau sử dụng
-        req.user = userDoc.data();
+        req.user = {
+            uid: decodedToken.uid,    // Firebase UID - dùng làm userId chính
+            userId: decodedToken.uid, // Alias cho tương thích với code cũ
+            ...userDoc.data()         // Các fields khác: name, email, role...
+        };
         next(); // Cho phép đi tiếp vào Controller
 
     } catch (error) {

@@ -16,6 +16,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const quizRoutes = require('./routes/quizRoutes');
 const studySetRoutes = require('./routes/studySetRoutes');
 const groupRoutes = require('./routes/groupRoutes');
+const liveRoutes = require('./routes/liveRoutes');
 app.use(cors());
 app.use(express.json());
 
@@ -25,6 +26,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/courses', quizRoutes);
 app.use('/api/courses', studySetRoutes);
 app.use('/api/groups', groupRoutes);
+app.use('/api/live', liveRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api', assignmentRoutes);
