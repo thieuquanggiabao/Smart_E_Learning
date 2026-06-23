@@ -5,7 +5,7 @@ import {
   MessageSquare, FileText, Send, Sparkles, Bot, User,
   ThumbsUp, RotateCcw, AlertCircle, BookOpen, Star,
   Volume2, Maximize2, List, X, Menu, CheckCheck,
-  Loader2, History
+  Loader2, History, Lock
 } from 'lucide-react';
 import api from '../services/api';
 import { Spinner, ProgressBar, Badge } from '../components/ui';
@@ -38,7 +38,7 @@ function ChatbotPanel({ courseId, lessonId, onOpenHistory }) {
       content: '👋 Xin chào! Tôi là trợ lý AI của bài học này.\n\nHãy hỏi bất cứ điều gì về nội dung bài học — tôi sẽ giải thích theo ngữ cảnh bài học hiện tại!'
     }
   ]);
-  const [input,   setInput]   = useState('');
+  const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const endRef = useRef(null);
 
@@ -92,15 +92,15 @@ function ChatbotPanel({ courseId, lessonId, onOpenHistory }) {
             {/* Avatar */}
             <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-white
                              ${msg.role === 'ai'
-                               ? 'bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30'
-                               : 'bg-gradient-to-br from-slate-600 to-slate-700'}`}>
+                ? 'bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30'
+                : 'bg-gradient-to-br from-slate-600 to-slate-700'}`}>
               {msg.role === 'ai' ? <Bot size={14} /> : <User size={14} />}
             </div>
             {/* Bubble */}
             <div className={`max-w-[84%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap
                             ${msg.role === 'user'
-                              ? 'bg-indigo-600 text-white rounded-tr-sm'
-                              : 'bg-white/6 border border-white/8 text-slate-200 rounded-tl-sm'}`}>
+                ? 'bg-indigo-600 text-white rounded-tr-sm'
+                : 'bg-white/6 border border-white/8 text-slate-200 rounded-tl-sm'}`}>
               {msg.content}
             </div>
           </div>
@@ -177,14 +177,14 @@ function ChatbotPanel({ courseId, lessonId, onOpenHistory }) {
 
 // ─── Assignment Panel ─────────────────────────────────────────
 function AssignmentPanel({ courseId, lessonId }) {
-  const [assignmentId,   setAssignmentId]   = useState(null);
+  const [assignmentId, setAssignmentId] = useState(null);
   const [assignmentInfo, setAssignmentInfo] = useState(null);
-  const [answerText,     setAnswerText]     = useState('');
-  const [loading,        setLoading]        = useState(false);
-  const [fetching,       setFetching]       = useState(true);
-  const [result,         setResult]         = useState(null);   // gradingResult
-  const [error,          setError]          = useState('');
-  const [charCount,      setCharCount]      = useState(0);
+  const [answerText, setAnswerText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [result, setResult] = useState(null);   // gradingResult
+  const [error, setError] = useState('');
+  const [charCount, setCharCount] = useState(0);
 
   useEffect(() => {
     if (!courseId || !lessonId) { setFetching(false); return; }
@@ -203,13 +203,13 @@ function AssignmentPanel({ courseId, lessonId }) {
           setAssignmentInfo(match);
         }
       })
-      .catch(() => {}) // Không có bài tập — bình thường
+      .catch(() => { }) // Không có bài tập — bình thường
       .finally(() => setFetching(false));
   }, [courseId, lessonId]);
 
   const handleSubmit = async () => {
     if (!answerText.trim()) { setError('Vui lòng nhập bài làm của bạn.'); return; }
-    if (!assignmentId)      { setError('Bài học này chưa có bài tập.'); return; }
+    if (!assignmentId) { setError('Bài học này chưa có bài tập.'); return; }
     setLoading(true);
     setError('');
     setResult(null);
@@ -227,9 +227,9 @@ function AssignmentPanel({ courseId, lessonId }) {
   };
 
   const scoreColor = s => s >= 8 ? 'text-emerald-400' : s >= 5 ? 'text-amber-400' : 'text-red-400';
-  const scoreBg    = s => s >= 8 ? 'from-emerald-500/10 to-teal-500/5 border-emerald-500/20'
-                        : s >= 5 ? 'from-amber-500/10 to-orange-500/5 border-amber-500/20'
-                        :          'from-red-500/10 to-rose-500/5 border-red-500/20';
+  const scoreBg = s => s >= 8 ? 'from-emerald-500/10 to-teal-500/5 border-emerald-500/20'
+    : s >= 5 ? 'from-amber-500/10 to-orange-500/5 border-amber-500/20'
+      : 'from-red-500/10 to-rose-500/5 border-red-500/20';
 
   if (fetching) {
     return <div className="flex items-center justify-center h-32"><Spinner size="md" /></div>;
@@ -306,7 +306,7 @@ function AssignmentPanel({ courseId, lessonId }) {
                         setCharCount(e.target.value.length);
                         setError('');
                       }}
-                      placeholder="Viết bài làm chi tiết của bạn tại đây...\n\nHãy nêu rõ ràng, có dẫn chứng và ví dụ cụ thể để được điểm cao."
+                      placeholder={"Viết bài làm chi tiết của bạn tại đây...\n\nHãy nêu rõ ràng, có dẫn chứng và ví dụ cụ thể để được điểm cao."}
                       rows={10}
                       disabled={loading}
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-3 resize-none
@@ -400,7 +400,7 @@ function AssignmentPanel({ courseId, lessonId }) {
                   <p className="text-xs text-slate-500 mt-2">
                     {result.aiScore >= 8 ? '🏆 Xuất sắc!'
                       : result.aiScore >= 6 ? '👍 Tốt, tiếp tục phát huy!'
-                      : '💪 Cần cải thiện thêm'}
+                        : '💪 Cần cải thiện thêm'}
                   </p>
                 </div>
 
@@ -439,27 +439,32 @@ export default function LessonViewPage() {
   const { courseId, lessonId: lessonIdParam } = useParams();
   const navigate = useNavigate();
 
-  const [lessons,     setLessons]     = useState([]);
-  const [lesson,      setLesson]      = useState(null);
-  const [loading,     setLoading]     = useState(true);
-  const [completing,  setCompleting]  = useState(false);
-  const [completed,   setCompleted]   = useState(false);
-  const [progress,    setProgress]    = useState(0);
+  const [lessons, setLessons] = useState([]);
+  const [lesson, setLesson] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [completing, setCompleting] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [enrolled, setEnrolled] = useState(false);
 
-  const [activeTab,   setActiveTab]   = useState('chat');
+  const [activeTab, setActiveTab] = useState('chat');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showReview,  setShowReview]  = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
-  // Load all lessons
+  // Load all lessons & Check enrollment
   useEffect(() => {
     if (!courseId) return;
     setLoading(true);
+
+    api.get(`/courses/${courseId}/check-enrollment`)
+      .then(res => setEnrolled(res.data.enrolled))
+      .catch(() => setEnrolled(false));
+
     api.get(`/courses/${courseId}/lessons`)
       .then(res => {
         const ls = Array.isArray(res.data) ? res.data : [];
         setLessons(ls);
-        // Chọn lesson: ưu tiên URL param, fallback lesson đầu tiên
         const target = lessonIdParam
           ? ls.find(l => l.lessonId === lessonIdParam) ?? ls[0]
           : ls[0];
@@ -467,7 +472,7 @@ export default function LessonViewPage() {
       })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
-  }, [courseId]);
+  }, [courseId, lessonIdParam]);
 
   // Khi URL param thay đổi (navigate giữa lessons)
   useEffect(() => {
@@ -482,8 +487,8 @@ export default function LessonViewPage() {
   }, [lessonIdParam, lessons]);
 
   const currentIndex = lessons.findIndex(l => l.lessonId === lesson?.lessonId);
-  const prevLesson   = currentIndex > 0 ? lessons[currentIndex - 1] : null;
-  const nextLesson   = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
+  const prevLesson = currentIndex > 0 ? lessons[currentIndex - 1] : null;
+  const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
 
   const goToLesson = (l) => {
     navigate(`/courses/${courseId}/lessons/${l.lessonId}`);
@@ -507,8 +512,8 @@ export default function LessonViewPage() {
   };
 
   const tabs = [
-    { id: 'chat',       label: 'AI Gia sư',  icon: MessageSquare },
-    { id: 'assignment', label: 'Bài tập',     icon: FileText      },
+    { id: 'chat', label: 'AI Gia sư', icon: MessageSquare },
+    { id: 'assignment', label: 'Bài tập', icon: FileText },
     { id: 'assessments', label: 'Đánh giá & Ôn tập', icon: BookOpen },
   ];
 
@@ -583,9 +588,9 @@ export default function LessonViewPage() {
                 className={`w-full text-left flex items-start gap-3 px-4 py-3.5
                              border-b border-white/4 transition-colors
                              ${isActive
-                               ? 'bg-indigo-500/15 border-l-2 border-l-indigo-500'
-                               : 'hover:bg-white/4 border-l-2 border-l-transparent'
-                             }`}
+                    ? 'bg-indigo-500/15 border-l-2 border-l-indigo-500'
+                    : 'hover:bg-white/4 border-l-2 border-l-transparent'
+                  }`}
               >
                 <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5
                                  ${isActive ? 'bg-indigo-500/25 text-indigo-300' : 'bg-white/6 text-slate-500'}`}>
@@ -670,170 +675,173 @@ export default function LessonViewPage() {
         <div className="flex-1 flex overflow-hidden">
 
           {/* ─ Video + Info ─ */}
-          <div className="flex-1 flex flex-col overflow-y-auto min-w-0">
-
-            {/* Video player */}
-            <div className="bg-black flex-shrink-0">
-              {lesson?.videoUrl ? (
-                <video
-                  key={lesson.lessonId}
-                  src={lesson.videoUrl}
-                  controls
-                  className="w-full aspect-video"
-                />
-              ) : (
-                <div className="w-full aspect-video bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900
-                                flex flex-col items-center justify-center gap-4 relative overflow-hidden">
-                  <div className="absolute w-96 h-96 rounded-full bg-indigo-600/10 blur-3xl" />
-                  <div className="relative w-24 h-24 rounded-full bg-indigo-500/20
-                                  flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-indigo-500/30 flex items-center justify-center">
-                      <Play size={32} className="text-indigo-300 ml-1.5" />
-                    </div>
+          {enrolled ? (
+            <div className="flex-1 flex flex-col overflow-y-auto min-w-0">
+              {/* Video player */}
+              <div className="bg-black flex-shrink-0">
+                {lesson?.videoUrl ? (
+                  <video
+                    key={lesson.lessonId}
+                    src={lesson.videoUrl}
+                    controls
+                    className="w-full aspect-video"
+                  />
+                ) : (
+                  <div className="w-full aspect-video bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center">
+                    <p className="text-slate-700 text-xs">Bài học chưa có video</p>
                   </div>
-                  <div className="flex items-center gap-5 text-slate-600 text-sm">
-                    <span className="flex items-center gap-1.5"><Volume2 size={14} /> Âm thanh</span>
-                    <span className="flex items-center gap-1.5"><Maximize2 size={14} /> Toàn màn hình</span>
-                  </div>
-                  <p className="text-slate-700 text-xs">Bài học chưa có video</p>
-                </div>
-              )}
-            </div>
-
-            {/* Lesson info */}
-            <div className="p-4 sm:p-6 space-y-4">
-              {/* Title + Complete button */}
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  {lesson?.order && (
-                    <p className="text-xs text-slate-500 mb-1 flex items-center gap-1.5">
-                      <BookOpen size={11} />
-                      Bài {lesson.order} / {lessons.length}
-                    </p>
-                  )}
-                  <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight">
-                    {lesson?.title || 'Nội dung bài học'}
-                  </h1>
-                </div>
-
-                <div className="flex gap-2 flex-shrink-0">
-                  <button
-                    id="mark-complete-btn"
-                    onClick={handleMarkComplete}
-                    disabled={completing || completed}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-                                transition-all duration-200 shadow-md
-                                ${completed
-                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
-                                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/20'
-                                } disabled:opacity-60`}
-                  >
-                    {completing
-                      ? <Loader2 size={15} className="animate-spin" />
-                      : completed
-                      ? <CheckCheck size={15} />
-                      : <CheckCircle2 size={15} />
-                    }
-                    {completed ? 'Đã hoàn thành' : completing ? 'Đang lưu...' : 'Đánh dấu xong'}
-                  </button>
-
-                  <button
-                    id="rate-btn"
-                    onClick={() => setShowReview(true)}
-                    className="p-2.5 rounded-xl border border-amber-500/30 text-amber-400
-                               hover:bg-amber-500/15 transition-colors"
-                    title="Đánh giá khóa học"
-                  >
-                    <Star size={15} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Progress after completion */}
-              {completed && progress > 0 && (
-                <div className="bg-emerald-500/8 border border-emerald-500/20 rounded-2xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCheck size={15} className="text-emerald-400" />
-                    <span className="text-emerald-400 text-sm font-medium">
-                      Tiến độ tổng thể: {progress}%
-                    </span>
-                  </div>
-                  <ProgressBar value={progress} color="emerald" showLabel={false} />
-                  {progress >= 100 && (
-                    <p className="text-emerald-300 text-xs mt-2">
-                      🎉 Chúc mừng! Bạn đã hoàn thành khóa học!
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Description */}
-              {lesson?.description && (
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-slate-400 text-sm leading-relaxed">{lesson.description}</p>
-                </div>
-              )}
-
-              {/* Navigation buttons */}
-              <div className="flex justify-between pt-2">
-                {prevLesson ? (
-                  <button
-                    onClick={() => goToLesson(prevLesson)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10
-                               text-slate-300 hover:text-white hover:border-white/20
-                               rounded-xl text-sm transition-colors"
-                  >
-                    <ChevronLeft size={15} />
-                    Bài trước
-                  </button>
-                ) : <div />}
-
-                {nextLesson && (
-                  <button
-                    onClick={() => goToLesson(nextLesson)}
-                    className="flex items-center gap-2 px-4 py-2.5
-                               bg-gradient-to-r from-indigo-600 to-violet-600
-                               hover:from-indigo-500 hover:to-violet-500
-                               text-white font-medium rounded-xl text-sm
-                               shadow-lg shadow-indigo-500/20 transition-all"
-                  >
-                    Bài tiếp theo
-                    <ChevronRight size={15} />
-                  </button>
                 )}
               </div>
+
+              {/* Lesson info */}
+              <div className="p-4 sm:p-6 space-y-4">
+                {/* Title + Complete button */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    {lesson?.order && (
+                      <p className="text-xs text-slate-500 mb-1 flex items-center gap-1.5">
+                        <BookOpen size={11} />
+                        Bài {lesson.order} / {lessons.length}
+                      </p>
+                    )}
+                    <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight">
+                      {lesson?.title || 'Nội dung bài học'}
+                    </h1>
+                  </div>
+
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      id="mark-complete-btn"
+                      onClick={handleMarkComplete}
+                      disabled={completing || completed}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+                                  transition-all duration-200 shadow-md
+                                  ${completed
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
+                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/20'
+                        } disabled:opacity-60`}
+                    >
+                      {completing
+                        ? <Loader2 size={15} className="animate-spin" />
+                        : completed
+                          ? <CheckCheck size={15} />
+                          : <CheckCircle2 size={15} />
+                      }
+                      {completed ? 'Đã hoàn thành' : completing ? 'Đang lưu...' : 'Đánh dấu xong'}
+                    </button>
+
+                    <button
+                      id="rate-btn"
+                      onClick={() => setShowReview(true)}
+                      className="p-2.5 rounded-xl border border-amber-500/30 text-amber-400
+                                 hover:bg-amber-500/15 transition-colors"
+                      title="Đánh giá khóa học"
+                    >
+                      <Star size={15} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Progress after completion */}
+                {completed && progress > 0 && (
+                  <div className="bg-emerald-500/8 border border-emerald-500/20 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCheck size={15} className="text-emerald-400" />
+                      <span className="text-emerald-400 text-sm font-medium">
+                        Tiến độ tổng thể: {progress}%
+                      </span>
+                    </div>
+                    <ProgressBar value={progress} color="emerald" showLabel={false} />
+                    {progress >= 100 && (
+                      <p className="text-emerald-300 text-xs mt-2">
+                        🎉 Chúc mừng! Bạn đã hoàn thành khóa học!
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Description */}
+                {lesson?.description && (
+                  <div className="prose prose-sm max-w-none">
+                    <p className="text-slate-400 text-sm leading-relaxed">{lesson.description}</p>
+                  </div>
+                )}
+
+                {/* Navigation buttons */}
+                <div className="flex justify-between pt-2">
+                  {prevLesson ? (
+                    <button
+                      onClick={() => goToLesson(prevLesson)}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10
+                                 text-slate-300 hover:text-white hover:border-white/20
+                                 rounded-xl text-sm transition-colors"
+                    >
+                      <ChevronLeft size={15} />
+                      Bài trước
+                    </button>
+                  ) : <div />}
+
+                  {nextLesson && (
+                    <button
+                      onClick={() => goToLesson(nextLesson)}
+                      className="flex items-center gap-2 px-4 py-2.5
+                                 bg-gradient-to-r from-indigo-600 to-violet-600
+                                 hover:from-indigo-500 hover:to-violet-500
+                                 text-white font-medium rounded-xl text-sm
+                                 shadow-lg shadow-indigo-500/20 transition-all"
+                    >
+                      Bài tiếp theo
+                      <ChevronRight size={15} />
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center bg-[#0d0d1a] p-6 text-center">
+              <Lock size={48} className="text-slate-500 mb-4" />
+              <h2 className="text-xl font-bold text-white mb-2">Nội dung bị khóa</h2>
+              <p className="text-slate-400 mb-6 max-w-md">Bạn cần đăng ký hoặc mua khóa học này để có thể xem video bài giảng và làm bài tập.</p>
+              <button
+                onClick={() => navigate(`/courses/${courseId}`)}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-colors"
+              >
+                Trở lại trang khóa học
+              </button>
+            </div>
+          )}
 
           {/* ─ Right panel: Chat + Assignment ─ */}
-          <div className="hidden xl:flex w-[400px] flex-shrink-0 flex-col
-                          border-l border-white/8 bg-[#0d0d1a]/40">
-            {/* Tabs */}
-            <div className="flex border-b border-white/8 flex-shrink-0">
-              {tabs.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  id={`tab-${id}`}
-                  onClick={() => setActiveTab(id)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium
-                              transition-all duration-200 border-b-2
-                              ${activeTab === id
-                                ? 'text-indigo-400 border-indigo-500 bg-indigo-500/5'
-                                : 'text-slate-500 border-transparent hover:text-slate-300'}`}
-                >
-                  <Icon size={14} />
-                  {label}
-                </button>
-              ))}
-            </div>
+          {enrolled && (
+            <div className="hidden xl:flex w-[400px] flex-shrink-0 flex-col
+                            border-l border-white/8 bg-[#0d0d1a]/40">
+              {/* Tabs */}
+              <div className="flex border-b border-white/8 flex-shrink-0">
+                {tabs.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    id={`tab-${id}`}
+                    onClick={() => setActiveTab(id)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium
+                                transition-all duration-200 border-b-2
+                                ${activeTab === id
+                        ? 'text-indigo-400 border-indigo-500 bg-indigo-500/5'
+                        : 'text-slate-500 border-transparent hover:text-slate-300'}`}
+                  >
+                    <Icon size={14} />
+                    {label}
+                  </button>
+                ))}
+              </div>
 
-            {/* Tab content */}
-            <div className="flex-1 overflow-hidden">
-              {activeTab === 'chat' && <ChatbotPanel courseId={courseId} lessonId={lesson?.lessonId} onOpenHistory={() => setShowHistoryModal(true)} />}
-              {activeTab === 'assignment' && <AssignmentPanel courseId={courseId} lessonId={lesson?.lessonId} />}
-              {activeTab === 'assessments' && <AssessmentsAndPracticeTab courseId={courseId} />}
+              {/* Tab content */}
+              <div className="flex-1 overflow-hidden">
+                {activeTab === 'chat' && <ChatbotPanel courseId={courseId} lessonId={lesson?.lessonId} onOpenHistory={() => setShowHistoryModal(true)} />}
+                {activeTab === 'assignment' && <AssignmentPanel courseId={courseId} lessonId={lesson?.lessonId} />}
+                {activeTab === 'assessments' && <AssessmentsAndPracticeTab courseId={courseId} />}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ─ Mobile bottom tabs ─ */}
@@ -846,8 +854,8 @@ export default function LessonViewPage() {
                 className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium
                             transition-colors border-t-2
                             ${activeTab === id
-                              ? 'text-indigo-400 border-indigo-500 bg-indigo-500/5'
-                              : 'text-slate-500 border-transparent'}`}
+                    ? 'text-indigo-400 border-indigo-500 bg-indigo-500/5'
+                    : 'text-slate-500 border-transparent'}`}
               >
                 <Icon size={15} />
                 {label}
@@ -856,12 +864,15 @@ export default function LessonViewPage() {
           </div>
 
           {/* Mobile panel */}
-          {activeTab && (
+          {activeTab && enrolled && (
             <div className="h-96 border-t border-white/8 bg-[#0d0d1a]/90 overflow-hidden flex flex-col">
-              {activeTab === 'chat'
-                ? <ChatbotPanel courseId={courseId} lessonId={lesson?.lessonId} onOpenHistory={() => setShowHistoryModal(true)} />
-                : <AssignmentPanel courseId={courseId} lessonId={lesson?.lessonId} />
-              }
+              {/* Content Panels */}
+              <div className="flex-1 overflow-y-auto min-h-0 bg-[#0d0d1a]/60">
+                {activeTab === 'chat'
+                  ? <ChatbotPanel courseId={courseId} lessonId={lesson?.lessonId} onOpenHistory={() => setShowHistoryModal(true)} />
+                  : <AssignmentPanel courseId={courseId} lessonId={lesson?.lessonId} />
+                }
+              </div>
             </div>
           )}
         </div>
@@ -872,7 +883,7 @@ export default function LessonViewPage() {
         <ReviewModal
           courseId={courseId}
           onClose={() => setShowReview(false)}
-          onSuccess={() => {}}
+          onSuccess={() => { }}
         />
       )}
 

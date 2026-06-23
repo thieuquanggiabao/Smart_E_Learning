@@ -5,6 +5,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 // Layout
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 
 // Pages
 import LoginPage          from './pages/LoginPage';
@@ -24,11 +25,17 @@ import SettingsPage       from './pages/SettingsPage';
 import GroupsListPage     from './pages/GroupsListPage';
 import GroupDetailPage    from './pages/GroupDetailPage';
 import LiveRoomPage       from './pages/LiveRoomPage';
+import AdminDashboard     from './pages/AdminDashboard';
+import AdminUsersPage     from './pages/AdminUsersPage';
+import AdminCoursesPage   from './pages/AdminCoursesPage';
 
 function RootRedirect() {
   const { user, isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (user?.role === 'teacher' || user?.role === 'admin') {
+  if (user?.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
+  if (user?.role === 'teacher') {
     return <Navigate to="/instructor/dashboard" replace />;
   }
   return <Navigate to="/dashboard" replace />;
@@ -57,6 +64,11 @@ function App() {
 
           {/* Live Room — Toàn màn hình, không có Layout sidebar */}
           <Route path="/live/:groupId" element={<ProtectedRoute><LiveRoomPage /></ProtectedRoute>} />
+
+          {/* Admin Routes */}
+          <Route path="/admin"         element={<AdminRoute><Layout><AdminDashboard /></Layout></AdminRoute>} />
+          <Route path="/admin/users"   element={<AdminRoute><Layout><AdminUsersPage /></Layout></AdminRoute>} />
+          <Route path="/admin/courses" element={<AdminRoute><Layout><AdminCoursesPage /></Layout></AdminRoute>} />
 
           {/* Student Routes */}
           <Route path="/courses"                         element={<ProtectedRoute><Layout><BrowseCourses /></Layout></ProtectedRoute>} />

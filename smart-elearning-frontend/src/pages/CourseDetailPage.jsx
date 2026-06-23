@@ -41,17 +41,17 @@ export default function CourseDetailPage() {
     Promise.all([
       api.get(`/courses/${courseId}`),
       api.get(`/courses/${courseId}/lessons`),
+      api.get(`/courses/${courseId}/check-enrollment`).catch(() => ({ data: { enrolled: false } }))
     ])
-      .then(([courseRes, lessonsRes]) => {
-        // GET /courses/:id → course object trực tiếp
+      .then(([courseRes, lessonsRes, enrollRes]) => {
         setCourse(courseRes.data);
-        // GET /courses/:courseId/lessons → lesson[]
         const ls = Array.isArray(lessonsRes.data) ? lessonsRes.data : [];
         setLessons(ls);
+        setEnrolled(enrollRes.data.enrolled || user?.role === 'admin'); // Admin coi như đã enrolled
       })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
-  }, [courseId]);
+  }, [courseId, user]);
 
   const handleEnroll = async () => {
     setEnrolling(true);
@@ -234,17 +234,25 @@ export default function CourseDetailPage() {
                              transition-all duration-200 active:scale-[0.98] mb-3"
                 >
                   {enrolling ? <Spinner size="sm" /> : <Play size={16} />}
-                  {enrolling ? 'Đang đăng ký...' : enrolled ? 'Đã đăng ký!' : 'Đăng ký & Học ngay'}
+                  {enrolled 
+                    ? 'Đã đăng ký - Vào học ngay' 
+                    : enrolling 
+                      ? 'Đang xử lý...' 
+                      : (!course.price || course.price === 0) 
+                        ? 'Vào học ngay (Miễn phí)' 
+                        : `Mua khóa học (${Number(course.price).toLocaleString()}đ)`}
                 </button>
 
-                <Link
-                  to={`/courses/${courseId}/lessons`}
-                  className="w-full py-2.5 flex items-center justify-center gap-2
-                             border border-white/10 text-slate-300 hover:text-white
-                             text-sm rounded-xl transition-colors"
-                >
-                  Xem nội dung khóa học
-                </Link>
+                {enrolled && (
+                  <Link
+                    to={`/courses/${courseId}/lessons`}
+                    className="w-full py-2.5 flex items-center justify-center gap-2
+                               border border-white/10 text-slate-300 hover:text-white
+                               text-sm rounded-xl transition-colors"
+                  >
+                    Tiếp tục học
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -269,12 +277,16 @@ export default function CourseDetailPage() {
         ) : (
           <div className="divide-y divide-white/5">
             {lessons.map((lesson, idx) => (
-              <Link
+              <div
                 key={lesson.lessonId}
-                to={`/courses/${courseId}/lessons/${lesson.lessonId}`}
-                id={`lesson-item-${lesson.lessonId}`}
-                className="flex items-center gap-4 px-6 py-4
-                           hover:bg-white/3 transition-colors group"
+                className="flex items-center gap-4 px-6 py-4 hover:bg-white/3 transition-colors group cursor-pointer"
+                onClick={() => {
+                  if (enrolled) {
+                    navigate(`/courses/${courseId}/lessons/${lesson.lessonId}`);
+                  } else {
+                    alert('Bạn cần mua khóa học để xem nội dung này!');
+                  }
+                }}
               >
                 {/* Order circle */}
                 <div className="w-9 h-9 flex-shrink-0 rounded-xl bg-indigo-500/10
@@ -296,14 +308,14 @@ export default function CourseDetailPage() {
 
                 {/* Video indicator */}
                 <div className="flex-shrink-0 flex items-center gap-2">
-                  {lesson.videoUrl
-                    ? <Play size={13} className="text-indigo-400" />
-                    : <Lock size={13} className="text-slate-600" />
-                  }
-                  <ChevronRight size={14} className="text-slate-600 group-hover:text-indigo-400
-                                                      transition-colors" />
+                  {enrolled ? (
+                    lesson.videoUrl ? <Play size={13} className="text-indigo-400" /> : <Play size={13} className="text-slate-600" />
+                  ) : (
+                    <Lock size={13} className="text-red-400" />
+                  )}
+                  <ChevronRight size={14} className="text-slate-600 group-hover:text-indigo-400 transition-colors" />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}

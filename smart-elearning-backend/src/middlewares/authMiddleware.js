@@ -41,5 +41,13 @@ const requireTeacher = (req, res, next) => {
         res.status(403).json({ message: 'Bạn không có quyền thực hiện hành động này!' });
     }
 };
+// 3. Hàm kiểm tra quyền Admin
+const requireAdmin = (req, res, next) => {
+    if (req.user.role === 'admin') {
+        next();
+    } else {
+        res.status(403).json({ message: 'Bạn không có quyền truy cập trang quản trị!' });
+    }
+};
 
-module.exports = { verifyToken, requireTeacher };
+module.exports = { verifyToken, requireTeacher, requireAdmin };

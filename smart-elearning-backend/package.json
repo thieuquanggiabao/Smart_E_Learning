@@ -12,6 +12,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@google-cloud/logging": "^11.2.3",
+    "@google-cloud/monitoring": "^5.3.3",
     "@google-cloud/speech": "^7.3.2",
     "@google-cloud/storage": "^7.21.0",
     "@google/generative-ai": "^0.24.1",

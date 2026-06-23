@@ -24,24 +24,47 @@ const enrollCourse = async (req, res) => {
             return res.status(400).json({ message: 'Bạn đã đăng ký khóa học này rồi!' });
         }
 
-        // 3. Tạo bản ghi đăng ký mới
-        // Tìm đoạn code tạo enrollment và sửa thành thế này:
+        // 3. Xử lý thanh toán nếu khóa học có phí
+        const courseData = courseDoc.data();
+        const price = Number(courseData.price) || 0;
+        
+        if (price > 0) {
+            // Đây là mô phỏng thanh toán thành công
+            const discountRate = Number(courseData.discountRate) || 10;
+            const adminRevenue = Math.round(price * (discountRate / 100));
+            const teacherRevenue = price - adminRevenue;
+
+            const newTransaction = {
+                courseId: courseId,
+                studentId: userId,
+                teacherId: courseData.teacherId || '',
+                amount: price,
+                adminRevenue: adminRevenue,
+                teacherRevenue: teacherRevenue,
+                status: 'success', // Giao dịch thành công
+                createdAt: new Date().toISOString()
+            };
+
+            // Lưu lịch sử giao dịch vào collection 'transactions'
+            await db.collection('transactions').add(newTransaction);
+        }
+
+        // 4. Tạo bản ghi đăng ký mới (Dù free hay có phí thì đều ghi danh)
         const newEnrollment = {
             courseId: courseId,
-            studentId: req.user.userId, // Đổi userId thành studentId cho chuẩn đề cương
+            studentId: userId,
             progress: 0,
-            completedLessons: [],       // Mảng trống chứa các bài học đã hoàn thành
-            averageScore: 0,            // Điểm trung bình ban đầu là 0
-            status: "learning",         // Trạng thái đang học
-            createdAt: new Date().toISOString() // Dùng createdAt thay vì enrolledAt
+            completedLessons: [],
+            averageScore: 0,
+            status: "learning",
+            createdAt: new Date().toISOString()
         };
-
 
         // Lưu vào collection 'enrollments'
         await enrollmentsRef.add(newEnrollment);
 
         res.status(201).json({
-            message: 'Đăng ký khóa học thành công!',
+            message: price > 0 ? 'Thanh toán và Đăng ký khóa học thành công!' : 'Đăng ký khóa học Miễn phí thành công!',
             enrollment: newEnrollment
         });
 
@@ -89,5 +112,32 @@ const getMyEnrolledCourses = async (req, res) => {
     }
 };
 
+// Kiểm tra xem học viên đã đăng ký khóa học chưa
+const checkEnrollment = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const userId = req.user?.userId;
+        const role = req.user?.role;
+
+        if (!userId) {
+            return res.status(200).json({ enrolled: false });
+        }
+
+        if (role === 'admin') {
+            return res.status(200).json({ enrolled: true });
+        }
+
+        const snapshot = await db.collection('enrollments')
+            .where('studentId', '==', userId)
+            .where('courseId', '==', courseId)
+            .get();
+
+        res.status(200).json({ enrolled: !snapshot.empty });
+    } catch (error) {
+        console.error('Lỗi kiểm tra trạng thái ghi danh:', error);
+        res.status(500).json({ enrolled: false });
+    }
+};
+
 // Đừng quên export thêm hàm này
-module.exports = { enrollCourse, getMyEnrolledCourses };
+module.exports = { enrollCourse, getMyEnrolledCourses, checkEnrollment };

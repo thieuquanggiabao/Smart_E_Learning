@@ -2,7 +2,7 @@ const { db } = require('../config/firebase');
 
 const createCourse = async (req, res) => {
     try {
-        const { title, description, thumbnailUrl, category, level } = req.body;
+        const { title, description, thumbnailUrl, category, level, price } = req.body;
 
         // Lấy thông tin giảng viên từ middleware verifyToken
         const teacherId = req.user.userId;
@@ -18,6 +18,9 @@ const createCourse = async (req, res) => {
             thumbnailUrl: thumbnailUrl || '',
             category: category || '',
             level: level || 'beginner',
+            price: Number(price) || 0, // Giá khóa học (VND), mặc định = 0 (Free)
+            discountRate: 10, // Admin nhận 10% chiết khấu
+            status: 'pending', // Khóa học mới tạo phải chờ duyệt
             totalLessons: 0, // Giá trị mặc định ban đầu
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -42,7 +45,10 @@ const getAllCourses = async (req, res) => {
         const coursesSnapshot = await db.collection('courses').get();
 
         // Duyệt qua từng document và lấy dữ liệu
-        const courses = coursesSnapshot.docs.map(doc => doc.data());
+        let courses = coursesSnapshot.docs.map(doc => doc.data());
+        
+        // Chỉ trả về những khóa học đã được duyệt (approved) hoặc các khóa học cũ chưa có trường status
+        courses = courses.filter(c => c.status === 'approved' || !c.status);
 
         res.status(200).json(courses);
     } catch (error) {

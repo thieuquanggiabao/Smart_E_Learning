@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, GraduationCap, Award, Settings,
-  ChevronLeft, ChevronRight, LogOut, Zap, Menu, X, Bell, User, Users
+  ChevronLeft, ChevronRight, LogOut, Zap, Menu, X, Bell, User, Users, Server
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,22 +12,32 @@ export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const isInstructor = user?.role === 'teacher' || user?.role === 'admin';
-
-  const navItems = isInstructor ? [
-    { to: '/instructor/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/instructor/courses',   icon: BookOpen,        label: 'Quản lý khóa học' },
-    { to: '/courses',              icon: GraduationCap,   label: 'Browse Courses' },
-    { to: '/groups',               icon: Users,           label: 'Nhóm' },
-    { to: '/settings',             icon: Settings,        label: 'Settings' },
-  ] : [
-    { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/courses',      icon: BookOpen,         label: 'Browse Courses' },
-    { to: '/my-learning',  icon: GraduationCap,    label: 'My Learning' },
-    { to: '/groups',       icon: Users,            label: 'Nhóm' },
-    { to: '/certificates', icon: Award,             label: 'Certificates' },
-    { to: '/settings',     icon: Settings,          label: 'Settings' },
-  ];
+  let navItems = [];
+  if (user?.role === 'admin') {
+    navItems = [
+      { to: '/admin',         icon: Server,          label: 'System Admin', end: true },
+      { to: '/admin/users',   icon: Users,           label: 'Quản lý người dùng' },
+      { to: '/admin/courses', icon: BookOpen,        label: 'Quản lý khóa học' },
+      { to: '/settings',      icon: Settings,        label: 'Cài đặt' },
+    ];
+  } else if (user?.role === 'teacher') {
+    navItems = [
+      { to: '/instructor/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/instructor/courses',   icon: BookOpen,        label: 'Quản lý khóa học' },
+      { to: '/courses',              icon: GraduationCap,   label: 'Browse Courses' },
+      { to: '/groups',               icon: Users,           label: 'Nhóm' },
+      { to: '/settings',             icon: Settings,        label: 'Cài đặt' },
+    ];
+  } else {
+    navItems = [
+      { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/courses',      icon: BookOpen,         label: 'Browse Courses' },
+      { to: '/my-learning',  icon: GraduationCap,    label: 'My Learning' },
+      { to: '/groups',       icon: Users,            label: 'Nhóm' },
+      { to: '/certificates', icon: Award,             label: 'Certificates' },
+      { to: '/settings',     icon: Settings,          label: 'Cài đặt' },
+    ];
+  }
 
   const handleLogout = () => {
     logout();
@@ -73,10 +83,11 @@ export default function Layout({ children }) {
 
         {/* Nav links */}
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-          {navItems.map(({ to, icon: Icon, label }) => (
+          {navItems.map(({ to, icon: Icon, label, end }) => (
             <NavLink
               key={to}
               to={to}
+              end={end}
               className={({ isActive }) =>
                 `sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                  transition-all duration-200 group relative

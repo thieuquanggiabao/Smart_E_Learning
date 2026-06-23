@@ -53,9 +53,23 @@ const getInstructorDashboard = async (req, res) => {
             });
         }
 
+        // 3. Tính tổng doanh thu của giảng viên
+        const transactionsSnapshot = await db.collection('transactions')
+            .where('teacherId', '==', instructorId)
+            .get();
+
+        let totalRevenue = 0;
+        transactionsSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.status === 'success') {
+                totalRevenue += data.teacherRevenue || 0;
+            }
+        });
+
         res.status(200).json({
             message: 'Tải dữ liệu thống kê giảng viên thành công!',
             totalOwnCourses: dashboardData.length,
+            totalRevenue: totalRevenue,
             dashboard: dashboardData
         });
 

@@ -16,7 +16,8 @@ export default function InstructorCreateCourse() {
     description: '',
     thumbnailUrl: '',
     category: '',
-    level: 'beginner'
+    level: 'beginner',
+    price: 0
   });
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -187,6 +188,25 @@ export default function InstructorCreateCourse() {
                 </select>
               </div>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Giá khóa học (VND)</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">₫</span>
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                min="0"
+                step="1000"
+                placeholder="Nhập 0 nếu khóa học miễn phí"
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 
+                           text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              />
+            </div>
+            <p className="text-xs text-slate-400 mt-1.5">Chiết khấu hệ thống mặc định là 10% doanh thu khóa học.</p>
           </div>
 
           <div className="pt-4 flex justify-end">

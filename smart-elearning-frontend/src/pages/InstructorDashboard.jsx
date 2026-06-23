@@ -93,9 +93,9 @@ export default function InstructorDashboard() {
             sub="Bình quân hoàn thành"
           />
           <StatCard
-            icon={Sparkles}   label="Điểm AI TB lớp"
-            value={overallAvgScore > 0 ? `${overallAvgScore}/10` : '—'} color="amber"
-            sub="Bình quân bài tập"
+            icon={Sparkles}   label="Tổng doanh thu"
+            value={`${(data?.totalRevenue || 0).toLocaleString()}đ`} color="amber"
+            sub="Đã trừ chiết khấu"
           />
         </div>
       )}

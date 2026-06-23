@@ -31,7 +31,9 @@ export default function LoginPage() {
       const { token, user } = res.data;
       login(user, token);
       // Route based on role
-      if (user.role === 'teacher' || user.role === 'admin') {
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } else if (user.role === 'teacher') {
         navigate('/instructor/dashboard');
       } else {
         navigate('/dashboard');
