@@ -4,6 +4,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Layout
 import Layout from './components/Layout';
+import PaymentResultPage from './pages/PaymentResultPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 
@@ -50,6 +51,7 @@ function App() {
           {/* Public */}
           <Route path="/login"    element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/payment-result" element={<PaymentResultPage />} />
 
           {/* Protected */}
           <Route path="/dashboard"            element={<ProtectedRoute><Layout><StudentDashboard /></Layout></ProtectedRoute>} />

@@ -57,19 +57,25 @@ export default function CourseDetailPage() {
     setEnrolling(true);
     setEnrollErr('');
     try {
-      await api.post(`/courses/${courseId}/enroll`);
-      setEnrolled(true);
-      // Chuyển sang trang xem bài học đầu tiên
-      if (lessons.length > 0) {
-        const first = lessons[0];
-        navigate(`/courses/${courseId}/lessons/${first.lessonId}`);
+      if (course?.price && Number(course.price) > 0) {
+        // Có phí -> Gọi API tạo link thanh toán PayOS
+        const res = await api.post('/payment/create-payment-link', { courseId });
+        if (res.data && res.data.checkoutUrl) {
+          window.location.href = res.data.checkoutUrl; // Chuyển hướng sang cổng thanh toán
+        }
       } else {
-        navigate(`/courses/${courseId}/lessons`);
+        // Miễn phí -> Đăng ký luôn
+        await api.post(`/courses/${courseId}/enroll`);
+        setEnrolled(true);
+        if (lessons.length > 0) {
+          navigate(`/courses/${courseId}/lessons/${lessons[0].lessonId}`);
+        } else {
+          navigate(`/courses/${courseId}/lessons`);
+        }
       }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Đăng ký thất bại.';
-      // "Bạn đã đăng ký khóa học này rồi!" → điều hướng
-      if (err.response?.status === 400) {
+      const msg = err.response?.data?.message || 'Đăng ký/Thanh toán thất bại.';
+      if (err.response?.status === 400 && msg.includes('đã đăng ký')) {
         navigate(`/courses/${courseId}/lessons`);
       } else {
         setEnrollErr(msg);

@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 export default function AdminDashboard() {
   const [logs, setLogs] = useState([]);
   const [metrics, setMetrics] = useState({ cpu: [], memory: [] });
-  const [revenue, setRevenue] = useState(0);
+  const [revenue, setRevenue] = useState({ admin: 0, platform: 0 });
   const [loading, setLoading] = useState(true);
   const [errorOnly, setErrorOnly] = useState(false);
 
@@ -18,14 +18,17 @@ export default function AdminDashboard() {
       const [logsRes, metricsRes, revRes] = await Promise.all([
         api.get('/admin/logs').catch(() => ({ data: { logs: [] } })),
         api.get('/admin/metrics').catch(() => ({ data: { cpu: [], memory: [] } })),
-        api.get('/admin/revenue').catch(() => ({ data: { totalRevenue: 0 } }))
+        api.get('/admin/revenue').catch(() => ({ data: { totalAdminRevenue: 0, totalPlatformRevenue: 0 } }))
       ]);
       setLogs(logsRes.data.logs || []);
       setMetrics({
         cpu: metricsRes.data.cpu || [],
         memory: metricsRes.data.memory || []
       });
-      setRevenue(revRes.data.totalRevenue || 0);
+      setRevenue({
+        admin: revRes.data.totalAdminRevenue || 0,
+        platform: revRes.data.totalPlatformRevenue || 0
+      });
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu admin:', error);
     } finally {
@@ -78,15 +81,28 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* Revenue Card */}
-      <div className="bg-gradient-to-r from-emerald-900/40 to-teal-900/40 border border-emerald-500/20 rounded-2xl p-6 flex items-center justify-between">
-        <div>
-          <p className="text-emerald-400 font-medium mb-1">Tổng doanh thu hệ thống (Admin)</p>
-          <h2 className="text-3xl font-bold text-white">{revenue.toLocaleString()} VND</h2>
-          <p className="text-slate-400 text-sm mt-1">Chiết khấu thu được từ các khóa học trả phí</p>
+      {/* Revenue Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/20 rounded-2xl p-6 flex items-center justify-between">
+          <div>
+            <p className="text-blue-400 font-medium mb-1">Tổng tiền học viên thanh toán</p>
+            <h2 className="text-3xl font-bold text-white">{revenue.platform.toLocaleString()} VND</h2>
+            <p className="text-slate-400 text-sm mt-1">Tổng doanh thu toàn sàn (Platform)</p>
+          </div>
+          <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <Activity size={32} className="text-blue-400" />
+          </div>
         </div>
-        <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
-          <Activity size={32} className="text-emerald-400" />
+
+        <div className="bg-gradient-to-r from-emerald-900/40 to-teal-900/40 border border-emerald-500/20 rounded-2xl p-6 flex items-center justify-between">
+          <div>
+            <p className="text-emerald-400 font-medium mb-1">Doanh thu Admin (Hoa hồng)</p>
+            <h2 className="text-3xl font-bold text-white">{revenue.admin.toLocaleString()} VND</h2>
+            <p className="text-slate-400 text-sm mt-1">Lợi nhuận ròng thu về từ chiết khấu</p>
+          </div>
+          <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <Activity size={32} className="text-emerald-400" />
+          </div>
         </div>
       </div>
 

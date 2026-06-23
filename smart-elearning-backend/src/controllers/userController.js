@@ -50,11 +50,39 @@ const getStudentDashboard = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Lỗi khi lấy dashboard:', error);
-        res.status(500).json({ message: 'Lỗi server khi tải dashboard', error: error.message });
+        console.error('Lỗi lấy Dashboard:', error);
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 };
 
-module.exports = {
-    getStudentDashboard
+const getMyCertificates = async (req, res) => {
+    try {
+        const studentId = req.user.userId;
+
+        const certSnapshot = await db.collection('certificates')
+            .where('studentId', '==', studentId)
+            .get();
+
+        const certificates = [];
+        for (const doc of certSnapshot.docs) {
+            const certData = doc.data();
+            
+            // Lấy thêm tên khóa học
+            const courseDoc = await db.collection('courses').doc(certData.courseId).get();
+            const courseTitle = courseDoc.exists ? courseDoc.data().title : 'Khóa học không xác định';
+            
+            certificates.push({
+                id: doc.id,
+                ...certData,
+                courseTitle
+            });
+        }
+
+        res.status(200).json({ certificates });
+    } catch (error) {
+        console.error('Lỗi lấy danh sách chứng chỉ:', error);
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
 };
+
+module.exports = { getStudentDashboard, getMyCertificates };

@@ -20,8 +20,11 @@ const checkAndGenerateCertificate = async (studentId, courseId) => {
 
         const enrollData = enrollSnapshot.docs[0].data();
 
-        // Điều kiện: Tiến độ 100% và điểm trung bình tích lũy từ 5 trở lên
-        if (enrollData.progress >= 100 && enrollData.averageScore >= 5.0) {
+        // 3. Xét điều kiện cấp chứng chỉ (Tạm thời ưu tiên phục vụ Demo)
+        // Chỉ cần học xong 100% video là được cấp chứng chỉ, bỏ qua điểm bài tập
+        const isEligible = (enrollData.progress >= 100);
+
+        if (isEligible) {
             const newCertificate = {
                 studentId: studentId,
                 courseId: courseId,

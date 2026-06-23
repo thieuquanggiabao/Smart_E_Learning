@@ -18,6 +18,7 @@ const studySetRoutes = require('./routes/studySetRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const liveRoutes = require('./routes/liveRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 app.use(cors());
 app.use(express.json());
 
@@ -36,6 +37,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/instructor', instructorRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/payment', paymentRoutes);
 
 app.get("/", (req, res) => {
     res.json({
@@ -108,6 +110,10 @@ io.on('connection', (socket) => {
         console.log('❌ Client disconnected:', socket.id);
     });
 });
+
+// 3. Khởi chạy Cron Jobs (Dọn rác giao dịch)
+const { scheduleCleanupJobs } = require('./utils/cronJobs');
+scheduleCleanupJobs();
 
 const PORT = process.env.PORT || 5000;
 

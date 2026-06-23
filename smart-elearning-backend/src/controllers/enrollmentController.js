@@ -29,24 +29,7 @@ const enrollCourse = async (req, res) => {
         const price = Number(courseData.price) || 0;
         
         if (price > 0) {
-            // Đây là mô phỏng thanh toán thành công
-            const discountRate = Number(courseData.discountRate) || 10;
-            const adminRevenue = Math.round(price * (discountRate / 100));
-            const teacherRevenue = price - adminRevenue;
-
-            const newTransaction = {
-                courseId: courseId,
-                studentId: userId,
-                teacherId: courseData.teacherId || '',
-                amount: price,
-                adminRevenue: adminRevenue,
-                teacherRevenue: teacherRevenue,
-                status: 'success', // Giao dịch thành công
-                createdAt: new Date().toISOString()
-            };
-
-            // Lưu lịch sử giao dịch vào collection 'transactions'
-            await db.collection('transactions').add(newTransaction);
+            return res.status(400).json({ message: 'Khóa học này có phí. Vui lòng sử dụng chức năng thanh toán qua PayOS!' });
         }
 
         // 4. Tạo bản ghi đăng ký mới (Dù free hay có phí thì đều ghi danh)
@@ -60,8 +43,9 @@ const enrollCourse = async (req, res) => {
             createdAt: new Date().toISOString()
         };
 
-        // Lưu vào collection 'enrollments'
-        await enrollmentsRef.add(newEnrollment);
+        // Lưu vào collection 'enrollments' bằng deterministic ID để chống spam
+        const enrollmentId = `${userId}_${courseId}`;
+        await enrollmentsRef.doc(enrollmentId).set(newEnrollment);
 
         res.status(201).json({
             message: price > 0 ? 'Thanh toán và Đăng ký khóa học thành công!' : 'Đăng ký khóa học Miễn phí thành công!',

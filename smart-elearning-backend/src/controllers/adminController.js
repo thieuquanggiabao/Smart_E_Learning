@@ -232,16 +232,18 @@ const deleteCourseAdmin = async (req, res) => {
 const getAdminRevenue = async (req, res) => {
     try {
         const transactionsSnapshot = await db.collection('transactions').get();
-        let totalRevenue = 0;
+        let totalAdminRevenue = 0;
+        let totalPlatformRevenue = 0; // Tổng số tiền học viên đã trả
 
         transactionsSnapshot.forEach(doc => {
             const data = doc.data();
             if (data.status === 'success') {
-                totalRevenue += data.adminRevenue || 0;
+                totalAdminRevenue += data.adminRevenue || 0;
+                totalPlatformRevenue += data.amount || 0;
             }
         });
 
-        res.status(200).json({ totalRevenue });
+        res.status(200).json({ totalAdminRevenue, totalPlatformRevenue });
     } catch (error) {
         console.error('Lỗi lấy doanh thu admin:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });

@@ -96,6 +96,10 @@ const markLessonCompleted = async (req, res) => {
 
         // 2. Kiểm tra xem bài học đã được học viên bấm hoàn thành từ trước chưa
         if (completedLessons.includes(lessonId)) {
+            // Dù đã hoàn thành, vẫn thử check và cấp chứng chỉ (dành cho người dùng cũ lấy lại chứng chỉ)
+            const { checkAndGenerateCertificate } = require('../utils/certificateHelper');
+            await checkAndGenerateCertificate(studentId, courseId);
+
             return res.status(200).json({
                 message: 'Bài học này đã được hoàn thành từ trước.',
                 progress: enrollmentData.progress
