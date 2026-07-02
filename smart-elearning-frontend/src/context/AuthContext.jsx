@@ -25,6 +25,14 @@ export function AuthProvider({ children }) {
     setUser(normalized);
   };
 
+  const updateUser = (updates) => {
+    setUser(prev => {
+      const newUser = { ...prev, ...updates };
+      localStorage.setItem('user', JSON.stringify(newUser));
+      return newUser;
+    });
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -35,7 +43,7 @@ export function AuthProvider({ children }) {
   const isAuthenticated = Boolean(token && user);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

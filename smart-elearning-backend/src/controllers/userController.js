@@ -85,4 +85,34 @@ const getMyCertificates = async (req, res) => {
     }
 };
 
-module.exports = { getStudentDashboard, getMyCertificates };
+const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { name, phone, bio, avatarUrl, socialLinks } = req.body;
+
+        const updateData = {
+            updatedAt: new Date().toISOString()
+        };
+
+        if (name !== undefined) updateData.name = name;
+        if (phone !== undefined) updateData.phone = phone;
+        if (bio !== undefined) updateData.bio = bio;
+        if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
+        if (socialLinks !== undefined) updateData.socialLinks = socialLinks;
+
+        await db.collection('users').doc(userId).update(updateData);
+
+        // Fetch updated user data
+        const updatedDoc = await db.collection('users').doc(userId).get();
+        
+        res.status(200).json({
+            message: 'Cập nhật hồ sơ thành công',
+            user: { id: updatedDoc.id, ...updatedDoc.data() }
+        });
+    } catch (error) {
+        console.error('Lỗi cập nhật hồ sơ:', error);
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+};
+
+module.exports = { getStudentDashboard, getMyCertificates, updateProfile };

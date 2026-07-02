@@ -3,9 +3,9 @@ const { db } = require('../config/firebase');
 require('dotenv').config({ override: true });
 
 const payos = new PayOS({
-  clientId: process.env.PAYOS_CLIENT_ID,
-  apiKey: process.env.PAYOS_API_KEY,
-  checksumKey: process.env.PAYOS_CHECKSUM_KEY
+    clientId: process.env.PAYOS_CLIENT_ID,
+    apiKey: process.env.PAYOS_API_KEY,
+    checksumKey: process.env.PAYOS_CHECKSUM_KEY
 });
 
 const createPaymentLink = async (req, res) => {
@@ -80,10 +80,10 @@ const receiveWebhook = async (req, res) => {
 
         if (webhookDataVerified.code === '00' || webhookDataVerified.success) {
             const orderCode = webhookDataVerified.orderCode || webhookDataVerified.data?.orderCode;
-            
+
             // Tìm giao dịch trong Firestore
             const txSnapshot = await db.collection('transactions').where('transactionId', '==', orderCode.toString()).get();
-            
+
             if (!txSnapshot.empty) {
                 const txDoc = txSnapshot.docs[0];
                 const txData = txDoc.data();
@@ -101,7 +101,7 @@ const receiveWebhook = async (req, res) => {
                         .where('courseId', '==', txData.courseId)
                         .where('studentId', '==', txData.studentId)
                         .get();
-                        
+
                     if (enrollSnapshot.empty) {
                         const newEnrollment = {
                             courseId: txData.courseId,
@@ -136,7 +136,7 @@ const verifyPayment = async (req, res) => {
 
         // Gọi PayOS API để lấy trạng thái mới nhất của đơn hàng
         const paymentInfo = await payos.paymentRequests.get(orderCode);
-        
+
         if (paymentInfo && paymentInfo.status === 'PAID') {
             // Tìm giao dịch trong DB
             const txSnapshot = await db.collection('transactions').where('transactionId', '==', orderCode.toString()).get();
@@ -156,7 +156,7 @@ const verifyPayment = async (req, res) => {
                         .where('courseId', '==', txData.courseId)
                         .where('studentId', '==', txData.studentId)
                         .get();
-                        
+
                     if (enrollSnapshot.empty) {
                         const newEnrollment = {
                             courseId: txData.courseId,
@@ -174,7 +174,7 @@ const verifyPayment = async (req, res) => {
                 return res.status(200).json({ message: 'Xác thực thành công', enrolled: true });
             }
         }
-        
+
         return res.status(400).json({ message: 'Giao dịch chưa hoàn thành hoặc không tìm thấy' });
     } catch (error) {
         console.error('Lỗi khi verify payment:', error);

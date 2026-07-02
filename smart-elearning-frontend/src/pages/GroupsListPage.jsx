@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Plus, X, Image as ImageIcon, Upload } from 'lucide-react';
+import { Users, Plus, X, Image as ImageIcon, Upload, Search } from 'lucide-react';
 import api from '../services/api';
 import { Spinner } from '../components/ui';
 import { uploadFileToStorage } from '../utils/uploadHelper';
@@ -9,6 +9,7 @@ export default function GroupsListPage() {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   // Create form state
@@ -78,6 +79,20 @@ export default function GroupsListPage() {
         </button>
       </div>
 
+      {/* Thanh tìm kiếm */}
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search size={18} className="text-slate-500" />
+        </div>
+        <input
+          type="text"
+          placeholder="Tìm kiếm nhóm theo tên..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-black/40 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+        />
+      </div>
+
       {groups.length === 0 ? (
         <div className="text-center py-20 bg-white/5 rounded-3xl border border-white/5">
           <Users size={48} className="mx-auto text-slate-500 mb-4" />
@@ -86,9 +101,22 @@ export default function GroupsListPage() {
             Tạo nhóm để mời bạn bè, cùng nhau trao đổi bài học và chuẩn bị cho phòng học trực tuyến.
           </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {groups.map(group => (
+      ) : (() => {
+        const filteredGroups = groups.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        
+        if (filteredGroups.length === 0) {
+          return (
+            <div className="text-center py-16 bg-white/5 rounded-3xl border border-white/5">
+              <Search size={40} className="mx-auto text-slate-500 mb-3" />
+              <h2 className="text-lg font-bold text-white mb-1">Không tìm thấy nhóm</h2>
+              <p className="text-slate-400 text-sm">Không có nhóm nào khớp với "{searchQuery}"</p>
+            </div>
+          );
+        }
+
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredGroups.map(group => (
             <div
               key={group.id}
               onClick={() => navigate(`/groups/${group.id}`)}
@@ -109,13 +137,14 @@ export default function GroupsListPage() {
                 
                 <div className="mt-4 pt-4 border-t border-white/5 flex items-center text-xs text-slate-500">
                   <Users size={14} className="mr-1.5" />
-                  {group.memberIds?.length || 0} thành viên
+                  {group.memberIds?.length || 1} thành viên
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        );
+      })()}
 
       {/* CREATE MODAL */}
       {showCreateModal && (

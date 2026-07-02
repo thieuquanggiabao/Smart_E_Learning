@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Play, CheckCircle2, ChevronLeft, ChevronRight,
@@ -175,61 +175,208 @@ function ChatbotPanel({ courseId, lessonId, onOpenHistory }) {
   );
 }
 
-// ─── Assignment Panel ─────────────────────────────────────────
-function AssignmentPanel({ courseId, lessonId }) {
-  const [assignmentId, setAssignmentId] = useState(null);
-  const [assignmentInfo, setAssignmentInfo] = useState(null);
+// ─── Single Assignment Item ─────────────────────────────────────
+function AssignmentItem({ assignment, index }) {
   const [answerText, setAnswerText] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const [result, setResult] = useState(null);   // gradingResult
-  const [error, setError] = useState('');
-  const [charCount, setCharCount] = useState(0);
+  const [loading, setLoading]       = useState(false);
+  const [result, setResult]         = useState(null);
+  const [error, setError]           = useState('');
+  const [charCount, setCharCount]   = useState(0);
+  const [expanded, setExpanded]     = useState(index === 0); // mở bài đầu tiên
+
+  const assignmentId = assignment.assignmentId || assignment.id;
+
+  const handleSubmit = async () => {
+    if (!answerText.trim()) { setError('Vui lòng nhập bài làm của bạn.'); return; }
+    setLoading(true); setError(''); setResult(null);
+    try {
+      const res = await api.post(`/assignments/${assignmentId}/submit`, { answerText });
+      setResult(res.data.gradingResult);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Nộp bài thất bại. Vui lòng thử lại.');
+    } finally { setLoading(false); }
+  };
+
+  const scoreColor = s => s >= 8 ? 'text-emerald-400' : s >= 5 ? 'text-amber-400' : 'text-red-400';
+  const scoreBg    = s => s >= 8
+    ? 'from-emerald-500/10 to-teal-500/5 border-emerald-500/20'
+    : s >= 5
+      ? 'from-amber-500/10 to-orange-500/5 border-amber-500/20'
+      : 'from-red-500/10 to-rose-500/5 border-red-500/20';
+
+  return (
+    <div className="border border-white/10 rounded-2xl overflow-hidden">
+      {/* Header accordion */}
+      <button
+        onClick={() => setExpanded(v => !v)}
+        className="w-full flex items-center justify-between p-3.5 bg-violet-500/8 hover:bg-violet-500/15 transition-colors text-left"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-7 h-7 rounded-full bg-violet-600/40 flex items-center justify-center text-violet-200 text-xs font-bold shrink-0">
+            {index + 1}
+          </div>
+          <div className="min-w-0">
+            <p className="text-white font-semibold text-sm truncate">📋 {assignment.title}</p>
+            <p className="text-slate-500 text-[11px] mt-0.5">Tối đa: {assignment.maxScore ?? 10} điểm</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          {result && (
+            <span className={`text-sm font-bold ${scoreColor(result.aiScore)}`}>
+              {result.aiScore}/{assignment.maxScore ?? 10}
+            </span>
+          )}
+          <span className="text-slate-500 text-xs">{expanded ? '▲' : '▼'}</span>
+        </div>
+      </button>
+
+      {/* Body */}
+      {expanded && (
+        <div className="p-4 space-y-4 bg-black/10">
+          {/* Assignment info */}
+          <div className="bg-gradient-to-br from-indigo-500/8 to-violet-500/5 border border-indigo-500/20 rounded-xl p-3">
+            {assignment.description && (
+              <p className="text-slate-400 text-xs leading-relaxed">{assignment.description}</p>
+            )}
+            {assignment.rubric && (
+              <div className="mt-2 pt-2 border-t border-white/8">
+                <p className="text-xs text-slate-500">
+                  <span className="text-slate-400 font-medium">Tiêu chí chấm: </span>
+                  {assignment.rubric}
+                </p>
+              </div>
+            )}
+            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs px-2 py-0.5 bg-violet-500/20 text-violet-300 rounded-full font-medium">
+                Điểm tối đa: {assignment.maxScore ?? 10}
+              </span>
+              {assignment.deadline && (
+                <span className="text-xs px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-full font-medium">
+                  Hạn: {new Date(assignment.deadline).toLocaleDateString('vi-VN')}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Textarea */}
+          {!result && (
+            <>
+              <div>
+                <label className="text-xs text-slate-400 mb-1.5 block font-medium">Bài làm của bạn</label>
+                <div className="relative">
+                  <textarea
+                    value={answerText}
+                    onChange={e => { setAnswerText(e.target.value); setCharCount(e.target.value.length); setError(''); }}
+                    placeholder={"Viết bài làm chi tiết tại đây...\n\nHãy nêu rõ ràng, có dẫn chứng và ví dụ cụ thể để được điểm cao."}
+                    rows={8}
+                    disabled={loading}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-3 resize-none text-sm text-white placeholder-slate-500/70 focus:outline-none focus:ring-2 focus:ring-violet-500/50 disabled:opacity-60 transition-all leading-relaxed"
+                  />
+                  <span className="absolute bottom-2 right-3 text-xs text-slate-600">{charCount} ký tự</span>
+                </div>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/8 border border-red-500/20 rounded-xl px-3 py-2.5">
+                  <AlertCircle size={13} />{error}
+                </div>
+              )}
+
+              <button
+                onClick={handleSubmit}
+                disabled={loading || !answerText.trim()}
+                className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-violet-500/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98]"
+              >
+                {loading
+                  ? <><Loader2 size={16} className="animate-spin" /> AI đang chấm bài...</>
+                  : <><Sparkles size={16} /> Nộp bài để AI chấm</>
+                }
+              </button>
+            </>
+          )}
+
+          {/* AI loading animation */}
+          {loading && (
+            <div className="flex flex-col items-center py-4 gap-3">
+              <div className="relative w-14 h-14">
+                <div className="absolute inset-0 rounded-full bg-violet-500/20 animate-ping" />
+                <div className="relative w-14 h-14 rounded-full bg-violet-500/15 flex items-center justify-center">
+                  <Sparkles size={24} className="text-violet-400" />
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-white text-sm font-medium">AI đang phân tích bài làm...</p>
+                <p className="text-slate-500 text-xs mt-1">Thường mất 5–10 giây</p>
+              </div>
+            </div>
+          )}
+
+          {/* Result */}
+          {result && !loading && (
+            <div className="space-y-3">
+              <div className={`bg-gradient-to-br ${scoreBg(result.aiScore)} border rounded-2xl p-5`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-violet-400" />
+                    <span className="text-white font-semibold text-sm">Kết quả chấm bài</span>
+                  </div>
+                  <button
+                    onClick={() => { setResult(null); setAnswerText(''); setCharCount(0); }}
+                    className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    <RotateCcw size={12} /> Làm lại
+                  </button>
+                </div>
+                <div className="flex items-end gap-2 mb-3">
+                  <span className={`text-5xl font-bold ${scoreColor(result.aiScore)}`}>{result.aiScore}</span>
+                  <span className="text-2xl text-slate-500 pb-1">/ {assignment.maxScore ?? 10}</span>
+                </div>
+                <ProgressBar value={(result.aiScore / (assignment.maxScore ?? 10)) * 100} color={result.aiScore >= 8 ? 'emerald' : result.aiScore >= 5 ? 'indigo' : 'amber'} showLabel={false} />
+                <p className="text-xs text-slate-500 mt-2">
+                  {result.aiScore >= 8 ? '🏆 Xuất sắc!' : result.aiScore >= 6 ? '👍 Tốt, tiếp tục phát huy!' : '💪 Cần cải thiện thêm'}
+                </p>
+              </div>
+
+              {result.aiFeedback && (
+                <div className="bg-white/4 border border-white/8 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-2"><ThumbsUp size={14} className="text-indigo-400" /><span className="text-xs font-semibold text-indigo-400 uppercase tracking-wide">Nhận xét</span></div>
+                  <p className="text-slate-300 text-sm leading-relaxed">{result.aiFeedback}</p>
+                </div>
+              )}
+              {result.improvements && (
+                <div className="bg-emerald-500/6 border border-emerald-500/20 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-2"><Sparkles size={14} className="text-emerald-400" /><span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Gợi ý cải thiện</span></div>
+                  <p className="text-slate-300 text-sm leading-relaxed">{result.improvements}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Assignment Panel (hỗ trợ nhiều bài tập) ──────────────────
+function AssignmentPanel({ courseId, lessonId }) {
+  const [assignments, setAssignments] = useState([]);
+  const [fetching, setFetching]       = useState(true);
 
   useEffect(() => {
     if (!courseId || !lessonId) { setFetching(false); return; }
     setFetching(true);
-    setResult(null);
-    setAnswerText('');
-    setError('');
 
-    // Lấy bài tập của lesson này
-    api.get(`/courses/${courseId}/assignments`)
+    api.get(`/courses/${courseId}/assignments?lessonId=${lessonId}`)
       .then(res => {
-        const list = Array.isArray(res.data) ? res.data : [];
-        const match = list.find(a => a.lessonId === lessonId);
-        if (match) {
-          setAssignmentId(match.assignmentId || match.id);
-          setAssignmentInfo(match);
-        }
+        console.log('[DEBUG LessonViewPage] raw:', res.data);
+        const raw = Array.isArray(res.data) ? res.data : [];
+        const filtered = raw.filter(a => a && a.lessonId === lessonId);
+        console.log('[DEBUG LessonViewPage] filtered:', filtered.length, filtered.map(a => a.title));
+        setAssignments(filtered);
       })
-      .catch(() => { }) // Không có bài tập — bình thường
+      .catch(err => { console.error('[DEBUG LessonViewPage] err:', err); setAssignments([]); })
       .finally(() => setFetching(false));
   }, [courseId, lessonId]);
-
-  const handleSubmit = async () => {
-    if (!answerText.trim()) { setError('Vui lòng nhập bài làm của bạn.'); return; }
-    if (!assignmentId) { setError('Bài học này chưa có bài tập.'); return; }
-    setLoading(true);
-    setError('');
-    setResult(null);
-
-    try {
-      // body: { answerText }  — đúng theo backend submitAndGrade
-      const res = await api.post(`/assignments/${assignmentId}/submit`, { answerText });
-      // response: { message, submissionId, gradingResult: { aiScore, aiFeedback, improvements, ... } }
-      setResult(res.data.gradingResult);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Nộp bài thất bại. Vui lòng thử lại.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const scoreColor = s => s >= 8 ? 'text-emerald-400' : s >= 5 ? 'text-amber-400' : 'text-red-400';
-  const scoreBg = s => s >= 8 ? 'from-emerald-500/10 to-teal-500/5 border-emerald-500/20'
-    : s >= 5 ? 'from-amber-500/10 to-orange-500/5 border-amber-500/20'
-      : 'from-red-500/10 to-rose-500/5 border-red-500/20';
 
   if (fetching) {
     return <div className="flex items-center justify-center h-32"><Spinner size="md" /></div>;
@@ -245,13 +392,13 @@ function AssignmentPanel({ courseId, lessonId }) {
             <Sparkles size={15} className="text-violet-400" />
           </div>
           <div>
-            <p className="text-white font-medium text-sm">Bài tập AI</p>
+            <p className="text-white font-medium text-sm">Bài tập AI ({assignments.length})</p>
             <p className="text-slate-500 text-xs">Nộp bài — AI chấm điểm tức thì</p>
           </div>
         </div>
 
         {/* No assignment */}
-        {!assignmentId && (
+        {assignments.length === 0 && (
           <div className="text-center py-10">
             <div className="w-14 h-14 rounded-2xl bg-slate-500/10 flex items-center justify-center mx-auto mb-3">
               <FileText size={24} className="text-slate-500" />
@@ -261,178 +408,20 @@ function AssignmentPanel({ courseId, lessonId }) {
           </div>
         )}
 
-        {assignmentId && (
-          <>
-            {/* Assignment info */}
-            {assignmentInfo && (
-              <div className="bg-gradient-to-br from-indigo-500/8 to-violet-500/5
-                              border border-indigo-500/20 rounded-2xl p-4">
-                <p className="text-white font-semibold text-sm mb-1">
-                  📋 {assignmentInfo.title}
-                </p>
-                {assignmentInfo.description && (
-                  <p className="text-slate-400 text-xs leading-relaxed">{assignmentInfo.description}</p>
-                )}
-                {assignmentInfo.rubric && (
-                  <div className="mt-2 pt-2 border-t border-white/8">
-                    <p className="text-xs text-slate-500">
-                      <span className="text-slate-400 font-medium">Tiêu chí chấm: </span>
-                      {assignmentInfo.rubric}
-                    </p>
-                  </div>
-                )}
-                <div className="mt-2 flex items-center gap-1.5">
-                  <Badge color="violet">Điểm tối đa: {assignmentInfo.maxScore ?? 10}</Badge>
-                  {assignmentInfo.deadline && (
-                    <Badge color="amber">Hạn: {new Date(assignmentInfo.deadline).toLocaleDateString('vi-VN')}</Badge>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Text area */}
-            {!result && (
-              <>
-                <div>
-                  <label className="text-xs text-slate-400 mb-1.5 block font-medium">
-                    Bài làm của bạn
-                  </label>
-                  <div className="relative">
-                    <textarea
-                      id="assignment-answer"
-                      value={answerText}
-                      onChange={e => {
-                        setAnswerText(e.target.value);
-                        setCharCount(e.target.value.length);
-                        setError('');
-                      }}
-                      placeholder={"Viết bài làm chi tiết của bạn tại đây...\n\nHãy nêu rõ ràng, có dẫn chứng và ví dụ cụ thể để được điểm cao."}
-                      rows={10}
-                      disabled={loading}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-3 resize-none
-                                 text-sm text-white placeholder-slate-500/70
-                                 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50
-                                 disabled:opacity-60 transition-all leading-relaxed"
-                    />
-                    <span className="absolute bottom-2 right-3 text-xs text-slate-600">
-                      {charCount} ký tự
-                    </span>
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/8
-                                  border border-red-500/20 rounded-xl px-3 py-2.5">
-                    <AlertCircle size={13} />
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  id="assignment-submit-btn"
-                  onClick={handleSubmit}
-                  disabled={loading || !answerText.trim()}
-                  className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600
-                             hover:from-violet-500 hover:to-indigo-500
-                             text-white font-semibold rounded-xl text-sm
-                             shadow-lg shadow-violet-500/25
-                             flex items-center justify-center gap-2
-                             disabled:opacity-50 disabled:cursor-not-allowed
-                             transition-all duration-200 active:scale-[0.98]"
-                >
-                  {loading
-                    ? <><Loader2 size={16} className="animate-spin" /> AI đang chấm bài...</>
-                    : <><Sparkles size={16} /> Nộp bài để AI chấm</>
-                  }
-                </button>
-              </>
-            )}
-
-            {/* AI grading loading */}
-            {loading && (
-              <div className="flex flex-col items-center py-6 gap-3">
-                <div className="relative w-16 h-16">
-                  <div className="absolute inset-0 rounded-full bg-violet-500/20 animate-ping" />
-                  <div className="relative w-16 h-16 rounded-full bg-violet-500/15
-                                  flex items-center justify-center">
-                    <Sparkles size={28} className="text-violet-400" />
-                  </div>
-                </div>
-                <div className="text-center">
-                  <p className="text-white text-sm font-medium">AI đang phân tích bài làm...</p>
-                  <p className="text-slate-500 text-xs mt-1">Thường mất 5–10 giây</p>
-                </div>
-              </div>
-            )}
-
-            {/* Result — gradingResult: { aiScore, aiFeedback, improvements } */}
-            {result && !loading && (
-              <div className="space-y-3">
-                {/* Score card */}
-                <div className={`bg-gradient-to-br ${scoreBg(result.aiScore)} border rounded-2xl p-5`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Sparkles size={16} className="text-violet-400" />
-                      <span className="text-white font-semibold text-sm">Kết quả chấm bài</span>
-                    </div>
-                    <button
-                      id="retry-assignment"
-                      onClick={() => { setResult(null); setAnswerText(''); setCharCount(0); }}
-                      className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors"
-                    >
-                      <RotateCcw size={12} /> Làm lại
-                    </button>
-                  </div>
-
-                  <div className="flex items-end gap-2 mb-3">
-                    <span className={`text-5xl font-bold ${scoreColor(result.aiScore)}`}>
-                      {result.aiScore}
-                    </span>
-                    <span className="text-2xl text-slate-500 pb-1">/ {assignmentInfo?.maxScore ?? 10}</span>
-                  </div>
-
-                  <ProgressBar
-                    value={(result.aiScore / (assignmentInfo?.maxScore ?? 10)) * 100}
-                    color={result.aiScore >= 8 ? 'emerald' : result.aiScore >= 5 ? 'indigo' : 'amber'}
-                    showLabel={false}
-                  />
-
-                  <p className="text-xs text-slate-500 mt-2">
-                    {result.aiScore >= 8 ? '🏆 Xuất sắc!'
-                      : result.aiScore >= 6 ? '👍 Tốt, tiếp tục phát huy!'
-                        : '💪 Cần cải thiện thêm'}
-                  </p>
-                </div>
-
-                {/* aiFeedback */}
-                {result.aiFeedback && (
-                  <div className="bg-white/4 border border-white/8 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <ThumbsUp size={14} className="text-indigo-400" />
-                      <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wide">Nhận xét</span>
-                    </div>
-                    <p className="text-slate-300 text-sm leading-relaxed">{result.aiFeedback}</p>
-                  </div>
-                )}
-
-                {/* improvements */}
-                {result.improvements && (
-                  <div className="bg-emerald-500/6 border border-emerald-500/20 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles size={14} className="text-emerald-400" />
-                      <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Gợi ý cải thiện</span>
-                    </div>
-                    <p className="text-slate-300 text-sm leading-relaxed">{result.improvements}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
+        {/* Danh sách bài tập */}
+        {assignments.length > 0 && (
+          <div className="space-y-3">
+            {assignments.map((a, i) => (
+              <AssignmentItem key={a.assignmentId || a.id} assignment={a} index={i} />
+            ))}
+          </div>
         )}
+
       </div>
     </div>
   );
 }
+
 
 // ─── Main LessonViewPage ──────────────────────────────────────
 export default function LessonViewPage() {

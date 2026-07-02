@@ -23,6 +23,11 @@ const startLiveRoom = async (req, res) => {
             return res.status(403).json({ message: 'Bạn không phải thành viên nhóm này' });
         }
 
+        const isAdmin = groupData.adminIds?.includes(userId) || groupData.ownerId === userId;
+        if (!isAdmin) {
+            return res.status(403).json({ message: 'Chỉ Quản trị viên mới có quyền tạo phòng Live' });
+        }
+
         // Nếu đã có phòng đang live thì không tạo mới
         if (groupData.liveRoom?.active) {
             return res.status(409).json({ 
@@ -143,6 +148,11 @@ const endLiveRoom = async (req, res) => {
         const groupData = groupSnap.data();
         if (!groupData.memberIds?.includes(userId)) {
             return res.status(403).json({ message: 'Bạn không phải thành viên nhóm này' });
+        }
+
+        const isAdmin = groupData.adminIds?.includes(userId) || groupData.ownerId === userId;
+        if (!isAdmin) {
+            return res.status(403).json({ message: 'Chỉ Quản trị viên mới có quyền kết thúc phòng Live' });
         }
 
         if (!groupData.liveRoom?.active) {

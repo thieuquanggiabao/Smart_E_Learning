@@ -160,14 +160,31 @@ const submitAndGrade = async (req, res) => {
 const getAssignmentsByCourse = async (req, res) => {
     try {
         const { courseId } = req.params;
+        const { lessonId } = req.query;
+
+        console.log(`[DEBUG assignments] courseId=${courseId}, lessonId=${lessonId}`);
+
+        // Luôn lấy TẤT CẢ assignments của course rồi lọc phía code
+        // (tránh lỗi Firestore cần composite index khi dùng 2 where)
         const snapshot = await db.collection('assignments').where('courseId', '==', courseId).get();
-        const assignments = snapshot.docs.map(doc => ({ assignmentId: doc.id, ...doc.data() }));
+        let assignments = snapshot.docs.map(doc => ({ assignmentId: doc.id, ...doc.data() }));
+
+        console.log(`[DEBUG assignments] total in course: ${assignments.length}`);
+        assignments.forEach(a => console.log(`  - id=${a.assignmentId}, lessonId=${a.lessonId}, title=${a.title}`));
+
+        // Lọc theo lessonId nếu được truyền
+        if (lessonId) {
+            assignments = assignments.filter(a => a.lessonId === lessonId);
+            console.log(`[DEBUG assignments] after filter by lessonId=${lessonId}: ${assignments.length}`);
+        }
+
         res.status(200).json(assignments);
     } catch (error) {
         console.error('Lỗi khi lấy danh sách bài tập:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 };
+
 
 const updateAssignment = async (req, res) => {
     try {

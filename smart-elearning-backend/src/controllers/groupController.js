@@ -1,4 +1,5 @@
 const { db } = require('../config/firebase');
+const { FieldValue } = require('firebase-admin/firestore');
 
 // Lấy danh sách nhóm mà user tham gia
 const getGroups = async (req, res) => {
@@ -53,6 +54,7 @@ const createGroup = async (req, res) => {
             description: description || '',
             coverImage: coverImage || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', // default cover
             ownerId,
+            adminIds: [ownerId],
             memberIds: [ownerId],
             createdAt: new Date().toISOString()
         };
@@ -89,10 +91,24 @@ const getGroupDetail = async (req, res) => {
             return res.status(403).json({ message: 'Bạn không có quyền truy cập nhóm này' });
         }
 
-        // Fetch members
+        // Fetch members and enrich with actual user data
         const membersSnap = await db.collection('groups').doc(groupId).collection('members').get();
         const members = [];
-        membersSnap.forEach(doc => members.push(doc.data()));
+        for (const doc of membersSnap.docs) {
+            const memberData = doc.data();
+            const userDoc = await db.collection('users').doc(memberData.userId).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                members.push({
+                    ...memberData,
+                    name: userData.name || memberData.name,
+                    systemRole: userData.role || 'student',
+                    avatarUrl: userData.avatarUrl || null
+                });
+            } else {
+                members.push(memberData);
+            }
+        }
 
         res.status(200).json({
             ...groupData,
@@ -275,11 +291,78 @@ const deleteGroup = async (req, res) => {
     }
 };
 
+// Cập nhật vai trò thành viên (admin/member)
+const updateMemberRole = async (req, res) => {
+    try {
+        const { groupId, userId } = req.params; // userId là ID của người được thay đổi quyền
+        const { role } = req.body; // 'admin' hoặc 'member'
+        const currentUserId = req.user.userId;
+
+        if (!['admin', 'member'].includes(role)) {
+            return res.status(400).json({ message: 'Role không hợp lệ' });
+        }
+
+        const groupDoc = await db.collection('groups').doc(groupId).get();
+        if (!groupDoc.exists) return res.status(404).json({ message: 'Không tìm thấy nhóm' });
+        
+        const groupData = groupDoc.data();
+        const { ownerId, adminIds = [] } = groupData;
+
+        // 1. Kiểm tra quyền của người gọi API (currentUserId)
+        const isOwner = currentUserId === ownerId;
+        const isAdmin = adminIds.includes(currentUserId);
+        
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ message: 'Bạn không có quyền thực hiện hành động này' });
+        }
+
+        // 2. Không ai được thay đổi quyền của Owner
+        if (userId === ownerId) {
+            return res.status(403).json({ message: 'Không thể thay đổi quyền của người tạo nhóm' });
+        }
+
+        // 3. Nếu người gọi API là admin (nhưng không phải owner), họ không thể hủy quyền của một admin khác
+        if (!isOwner && isAdmin && role === 'member') {
+            if (adminIds.includes(userId)) {
+                return res.status(403).json({ message: 'Chỉ Trưởng nhóm mới có quyền hủy chức vụ Quản trị viên' });
+            }
+        }
+
+        // 4. Kiểm tra user bị đổi quyền có trong nhóm không
+        if (!groupData.memberIds.includes(userId)) {
+            return res.status(404).json({ message: 'Người dùng không thuộc nhóm này' });
+        }
+
+        // Tiến hành cập nhật
+        const batch = db.batch();
+        const groupRef = db.collection('groups').doc(groupId);
+        const memberRef = groupRef.collection('members').doc(userId);
+
+        // Cập nhật role trong sub-collection members
+        batch.update(memberRef, { role });
+
+        // Cập nhật adminIds ở document chính
+        const adminFieldUpdate = role === 'admin' 
+            ? FieldValue.arrayUnion(userId)
+            : FieldValue.arrayRemove(userId);
+            
+        batch.update(groupRef, { adminIds: adminFieldUpdate });
+
+        await batch.commit();
+
+        res.status(200).json({ message: `Đã cập nhật quyền thành công` });
+    } catch (error) {
+        console.error('Lỗi cập nhật quyền thành viên:', error);
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+};
+
 module.exports = {
     getGroups,
     createGroup,
     getGroupDetail,
     addMemberByEmail,
     getGroupMessages,
-    deleteGroup
+    deleteGroup,
+    updateMemberRole
 };
